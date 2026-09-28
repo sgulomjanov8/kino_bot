@@ -7,7 +7,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
 # Bot tokeningiz
-BOT_TOKEN = "8974629165:AAEjc7pipwwxzjU1JKAeKyo4I_CQtsbCsQs"
+BOT_TOKEN = "8974629165:AAEqb1feOKJomWLui2TNJs79w8cOJBj_fmU"
 
 # Majburiy obuna kanali va Admin ID
 CHANNEL_USERNAME = "@MediaUzkinolar"
