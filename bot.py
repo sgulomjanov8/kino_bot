@@ -1,17 +1,19 @@
 import asyncio
 import logging
+import os
 import re
 from aiogram import Bot, Dispatcher, F, types
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiohttp import web
 
 # Bot tokeningiz
-BOT_TOKEN = "8974629165:AAEqb1feOKJomWLui2TNJs79w8cOJBj_fmU"
+BOT_TOKEN = "8974629165:AAEjc7pipwwxzjU1JKAeKyo4I_CQtsbCsQs"
 
 # Majburiy obuna kanali va Admin ID
 CHANNEL_USERNAME = "@MediaUzkinolar"
-ADMIN_ID = 7349877336  # ⚠️ Shu yerga o'zingizning Telegram ID raqamingizni yozing!
+ADMIN_ID = 7349877336
 
 # Baza (Vaqtinchalik xotira)
 movie_db = {}
@@ -21,6 +23,21 @@ logging.basicConfig(level=logging.INFO)
 
 bot = Bot(token=BOT_TOKEN)
 dp = Dispatcher()
+
+
+# Render Port Scan uchun kichik veb-server
+async def handle(request):
+    return web.Response(text="Bot muvaffaqiyatli ishlayapti!")
+
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get('/', handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, '0.0.0.0', port)
+    await site.start()
 
 
 # Majburiy obunani tekshiruvchi funksiya
@@ -44,7 +61,7 @@ def get_sub_keyboard():
     return keyboard
 
 
-# /start buyrug'i (Samimiy va chiroyli xabar)
+# /start buyrug'i
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
     is_subscribed = await check_subscription(message.from_user.id)
@@ -89,13 +106,11 @@ async def add_movie_handler(message: types.Message):
     caption = message.caption or ""
     file_id = message.video.file_id
 
-    # Izoh ichidan "Kino kodi:" dan keyingi FAQAT birinchi so'z/sonni ajratib olish
     match = re.search(r"Kino kodi:\s*`?([^\s\n`]+)`?", caption, re.IGNORECASE)
 
     if match:
-        code = match.group(1).strip()  # FAQAT "2012" yoki "09" kabi toza kod ajraladi
+        code = match.group(1).strip()
 
-        # Bazaga saqlaymiz
         movie_db[code] = {
             "file_id": file_id,
             "caption": caption
@@ -127,7 +142,7 @@ async def get_movie_handler(message: types.Message):
         )
         return
 
-    code = message.text.strip()  # Foydalanuvchi yuborgan kod (masalan: 2012)
+    code = message.text.strip()
 
     if code in movie_db:
         movie = movie_db[code]
@@ -142,9 +157,10 @@ async def get_movie_handler(message: types.Message):
         )
 
 
-# Botni ishga tushirish
+# Botni va Veb-serverni birgalikda ishga tushirish
 async def main():
-    print("Bot ishga tushdi...")
+    print("Veb-server va Bot ishga tushmoqda...")
+    await start_web_server()
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
